@@ -1,0 +1,161 @@
+name: Scheduled Traffic Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Every 5 minutes - triggers collect job
+    - cron: '0 * * * *'     # Every hour - triggers commit job
+  workflow_dispatch:
+    inputs:
+      job_to_run:
+        description: 'Which job to run'
+        required: true
+        default: 'collect'
+        type: choice
+        options:
+          - collect
+          - commit
+
+# Ensure only one workflow run executes at a time to prevent race conditions
+# between collect and commit jobs accessing the same artifact
+concurrency:
+  group: traffic-monitor
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    # Schedule '*/5 * * * *' triggers at minute intervals (but not at :00), workflow_dispatch allows manual trigger
+    if: (github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'collect')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install Python with uv
+        run: uv python install 3.12
+
+      - name: Download existing output artifact from previous runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the latest artifact named output-artifact
+          ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/artifacts \
+            --jq '.artifacts | map(select(.name == "output-artifact" and .expired == false)) | sort_by(.created_at) | last | .id // empty')
+          
+          if [ -n "$ARTIFACT_ID" ]; then
+            echo "Downloading artifact ID: $ARTIFACT_ID"
+            gh api repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip > artifact.zip
+            if [ -s artifact.zip ]; then
+              unzip -o artifact.zip -d ./artifact
+              if [ -f ./artifact/output.txt ]; then
+                cp ./artifact/output.txt ./output.txt
+                echo "Restored output.txt from previous artifact"
+              fi
+            else
+              echo "Downloaded artifact is empty"
+            fi
+          else
+            echo "No previous artifact found"
+          fi
+          
+          # Ensure output.txt exists
+          touch output.txt
+
+      - name: Run Python script and append to output.txt
+        run: |
+          uv run print_routes.py >> output.txt
+          # log what's in output.txt so far
+          echo "Current contents of output.txt:"
+          cat output.txt
+
+      - name: Upload output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-artifact
+          path: output.txt
+          overwrite: true
+
+  commit:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    # Schedule '0 * * * *' triggers at the top of each hour
+    if: (github.event_name == 'schedule' && github.event.schedule == '0 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'commit')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout data branch
+        run: |
+          DATA_BRANCH="${{ github.ref_name }}_data"
+          echo "Checking out data branch: $DATA_BRANCH"
+          git fetch origin "$DATA_BRANCH" --depth=1 || {
+            echo "Data branch $DATA_BRANCH does not exist. Creating it from current branch."
+            git checkout -b "$DATA_BRANCH"
+            git push origin "$DATA_BRANCH"
+          }
+          git checkout "$DATA_BRANCH"
+
+      - name: Download output artifact from previous runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the latest artifact named output-artifact
+          ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/artifacts \
+            --jq '.artifacts | map(select(.name == "output-artifact" and .expired == false)) | sort_by(.created_at) | last | .id // empty')
+          
+          if [ -n "$ARTIFACT_ID" ]; then
+            echo "Downloading artifact ID: $ARTIFACT_ID"
+            gh api repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip > artifact.zip
+            if [ -s artifact.zip ]; then
+              unzip -o artifact.zip -d ./artifact
+            else
+              echo "Downloaded artifact is empty"
+              mkdir -p ./artifact
+            fi
+          else
+            echo "No artifact found"
+            mkdir -p ./artifact
+          fi
+
+      - name: Append output.txt to data/traffic.tsv
+        run: |
+          if [ -f ./artifact/output.txt ]; then
+            mkdir -p data
+            cat ./artifact/output.txt >> data/traffic.tsv
+            echo "Appended output.txt content to data/traffic.tsv"
+          else
+            echo "No output.txt found to append"
+          fi
+
+      - name: Commit and push data/traffic.tsv
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/traffic.tsv
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update data/traffic.tsv with collected data"
+            git push --set-upstream origin "$(git rev-parse --abbrev-ref HEAD)"
+          fi
+
+      - name: Delete old artifacts to clear output
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Delete all output-artifact artifacts to start fresh
+          ARTIFACT_IDS=$(gh api repos/${{ github.repository }}/actions/artifacts \
+            --jq '.artifacts | map(select(.name == "output-artifact")) | .[].id')
+          
+          for ID in $ARTIFACT_IDS; do
+            echo "Deleting artifact ID: $ID"
+            gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$ID || true
+          done
+          echo "All output artifacts cleared"
