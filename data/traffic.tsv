@@ -1,5 +1,4 @@
-Calculating routes from: 120 Carnotstraat, Antwerpen, Belgium to 51.215447,4.4447065
-
+datetime	from	to	duration	streets
 2025-11-28T22:55:13.056040	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	316	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', None, 'Helmstraat', 'Borsbeekstraat', 'Gijselsstraat']
 2025-11-28T22:55:13.056040	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	348	['Carnotstraat', 'Kerkstraat', 'Lovelingstraat', 'Schapenstraat', 'Kistemaeckersstraat', 'Vercammenstraat', 'Groeningerplein', 'Drossaardstraat', 'Borsbeekstraat', 'Gijselsstraat', None]
 2025-11-28T22:55:13.056040	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	350	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', 'Statielei', None]
