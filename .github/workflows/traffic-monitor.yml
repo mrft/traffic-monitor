@@ -3,7 +3,7 @@ name: Scheduled Traffic Monitor
 on:
   schedule:
     - cron: '*/5 * * * *'  # Every 5 minutes - triggers collect job
-    - cron: '0 * * * *'     # Every hour - triggers commit job
+    - cron: '0 0 * * *'     # Every day at midnight - triggers commit job
   workflow_dispatch:
     inputs:
       job_to_run:
