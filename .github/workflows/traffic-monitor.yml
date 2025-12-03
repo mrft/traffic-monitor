@@ -11,8 +11,10 @@ env:
 on:
   schedule:
     # IMPORTANT: keep this in sync with 'env.COLLECT_SCHEDULE' above !!!
-    - cron: '*/5 * * * *'  # Every 5 minutes - triggers collect job
-    - cron: '0 0 * * *'     # Every day at midnight - triggers commit job
+    # COLLECT JOB SCHEDULE
+    - cron: '*/5 * * * *'        # Every 5 minutes
+    # COMMIT JOB SCHEDULE
+    - cron: '0 1,8,12,17,20 * * *'  # Every day at 1:00, 8:00, 12:00, 17:00, and 20:00 UTC
   workflow_dispatch:
     inputs:
       job_to_run:
