@@ -1,7 +1,16 @@
 name: Scheduled Traffic Monitor
 
+
+env:
+  # this will be used in the 'if' conditions to identify the schedule
+  # if it equals this value, we will run the collect job
+  # if not, we will run the commit job
+  # IMPORTANT: keep this in sync with the cron schedule in 'on.schedule' !!!
+  COLLECT_SCHEDULE: '*/5 * * * *'
+
 on:
   schedule:
+    # IMPORTANT: keep this in sync with 'env.COLLECT_SCHEDULE' above !!!
     - cron: '*/5 * * * *'  # Every 5 minutes - triggers collect job
     - cron: '0 0 * * *'     # Every day at midnight - triggers commit job
   workflow_dispatch:
@@ -27,8 +36,8 @@ jobs:
     permissions:
       actions: write
       contents: read
-    # Schedule '*/5 * * * *' triggers at minute intervals (but not at :00), workflow_dispatch allows manual trigger
-    if: (github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'collect')
+    # Schedule env.COLLECT_SCHEDULE (see env at the top), workflow_dispatch allows manual trigger
+    if: (github.event_name == 'schedule' && github.event.schedule == env.COLLECT_SCHEDULE) || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'collect')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -85,8 +94,9 @@ jobs:
     permissions:
       actions: write
       contents: write
-    # Schedule '0 * * * *' triggers at the top of each hour
-    if: (github.event_name == 'schedule' && github.event.schedule == '0 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'commit')
+    # NOT Schedule env.COLLECT_SCHEDULE (see env at the top):
+    # when not collecting we'll commit, workflow_dispatch allows manual trigger
+    if: (github.event_name == 'schedule' && github.event.schedule != env.COLLECT_SCHEDULE) || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'commit')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
