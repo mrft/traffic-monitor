@@ -2,15 +2,16 @@ name: Scheduled Traffic Monitor
 
 
 env:
-  # this will be used in the 'if' conditions to identify the schedule
-  # if it equals this value, we will run the collect job
-  # if not, we will run the commit job
-  # IMPORTANT: keep this in sync with the cron schedule in 'on.schedule' !!!
-  COLLECT_SCHEDULE: '*/5 * * * *'
+  # Default routes list. Each line is: <start_address>|<end_address>
+  # Add more lines to monitor multiple routes.
+  ROUTES: |
+    120 Carnotstraat, Antwerpen, Belgium|51.215447,4.4447065
+    412 N12, Antwerpen, Belgium|51.219000,4.425000
+    Antwerpen Centraal Station, Antwerpen, Belgium|51.217222,4.421944
 
 on:
   schedule:
-    # IMPORTANT: keep this in sync with 'env.COLLECT_SCHEDULE' above !!!
+    # IMPORTANT: keep this in sync with 'if:'' statements below (the ones that decide whether to run collect or commit) !!!
     # COLLECT JOB SCHEDULE
     - cron: '*/5 * * * *'        # Every 5 minutes
     # COMMIT JOB SCHEDULE
@@ -25,6 +26,11 @@ on:
         options:
           - collect
           - commit
+      routes:
+        description: 'Optional multiline routes string to override `ROUTES` env. Each line: start|end'
+        required: false
+        default: ''
+        type: string
 
 # Ensure only one workflow run executes at a time to prevent race conditions
 # between collect and commit jobs accessing the same artifact
@@ -38,8 +44,8 @@ jobs:
     permissions:
       actions: write
       contents: read
-    # Schedule env.COLLECT_SCHEDULE (see env at the top), workflow_dispatch allows manual trigger
-    if: (github.event_name == 'schedule' && github.event.schedule == env.COLLECT_SCHEDULE) || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'collect')
+    # Schedule (see on.schedule at the top), workflow_dispatch allows manual trigger
+    if: (github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'collect')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -79,7 +85,31 @@ jobs:
 
       - name: Run Python script and append to output.txt
         run: |
-          uv run print_routes.py >> output.txt
+          # Prefer workflow_dispatch `routes` input; fall back to top-level env `ROUTES`
+          RAW_ROUTES="${{ github.event.inputs.routes || env.ROUTES }}"
+
+          echo "Using routes:"
+          echo "$RAW_ROUTES"
+
+          # Iterate over non-empty lines in RAW_ROUTES. Each line should be: start|end
+          echo "$RAW_ROUTES" | while IFS= read -r line || [ -n "$line" ]; do
+            # skip empty lines
+            if [ -z "$(echo "$line" | tr -d '[:space:]')" ]; then
+              continue
+            fi
+
+            # split on first '|'
+            START="$(echo "$line" | awk -F'|' '{print $1}' | sed -e 's/^\s*//;s/\s*$//')"
+            END="$(echo "$line" | awk -F'|' '{print $2}' | sed -e 's/^\s*//;s/\s*$//')"
+
+            if [ -z "$START" ] || [ -z "$END" ]; then
+              echo "Skipping invalid route line: $line"
+              continue
+            fi
+
+            echo "Running route: '$START' -> '$END'"
+            uv run print_routes.py "$START" "$END" >> output.txt || echo "Route command failed for: $line"
+          done
           # log what's in output.txt so far
           echo "Current contents of output.txt:"
           cat output.txt
@@ -96,9 +126,9 @@ jobs:
     permissions:
       actions: write
       contents: write
-    # NOT Schedule env.COLLECT_SCHEDULE (see env at the top):
+    # NOT the collect schedule (see on.schedule at the top):
     # when not collecting we'll commit, workflow_dispatch allows manual trigger
-    if: (github.event_name == 'schedule' && github.event.schedule != env.COLLECT_SCHEDULE) || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'commit')
+    if: (github.event_name == 'schedule' && github.event.schedule != '*/5 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.job_to_run == 'commit')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

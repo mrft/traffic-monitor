@@ -1,31 +1,34 @@
 #!/usr/bin/env python3
-"""Print current traffic to stdout."""
-import WazeRouteCalculator
+"""Print current traffic to stdout.
+
+Usage: print_routes.py <start_address> <end_address> [--region REGION]
+"""
+import argparse
 import logging
 from datetime import datetime
+import WazeRouteCalculator
 
-if __name__ == "__main__":
+
+def main():
+    parser = argparse.ArgumentParser(description="Print current traffic to stdout")
+    parser.add_argument("start_address", help="Start address (string or coords)")
+    parser.add_argument("end_address", help="End address (string or coords)")
+    parser.add_argument("--region", default="EU", help="Waze region (default: EU)")
+    args = parser.parse_args()
+
     NOW_STRING = datetime.now().isoformat()
 
     # Configure logging for WazeRouteCalculator to see more details if needed
     log = logging.getLogger('WazeRouteCalculator.WazeRouteCalculator')
-    log.setLevel(logging.ERROR) # Set to INFO for less verbose output, or DEBUG for more details
+    log.setLevel(logging.ERROR)  # Set to INFO for less verbose output, or DEBUG for more details
     handler = logging.StreamHandler()
     log.addHandler(handler)
 
-    # Define start and end addresses
-    start_address = "120 Carnotstraat, Antwerpen, Belgium"
-    end_address = "51.215447,4.4447065" # "51°12'55.6N 4°26'46.2E" # "412 N12, Antwerpen, Belgium"
-    region = "EU" # Using 'EU' region for broader compatibility
-
-    # print(f"Calculating routes from: {start_address} to {end_address}\n")
+    start_address = args.start_address
+    end_address = args.end_address
+    region = args.region
 
     route = WazeRouteCalculator.WazeRouteCalculator(start_address, end_address, region)
-    # route.calc_route_info()
-
-    # print("Calculate multiple routes")
-    # calc_all_routes_info takes an optional single parameter, the number of routes to fetch. Note that the Waze API may not return as many possibilities as requested. The function returns a dict: {'routeType-shortRouteName': (route_time1, route_distance1), 'routeType-shortRouteName': (route_time2, route_distance2), ...}.
-    # route.calc_all_routes_info(3)
 
     try:
         index = 0
@@ -36,4 +39,8 @@ if __name__ == "__main__":
                 # \t{r['routeName']}  : stuff like 'Carnotstraat Antwerpen', 'Kerkstraat Antwerpen' but not unique per route
                 print(f"{NOW_STRING}\t{start_address}\t{end_address}\t{r['totalRouteTime']}\t{r['streetNames']}")
     except Exception as e:
-        print(f"{NOW_STRING} Fout bij ophalen route {r}: {e}")
+        print(f"{NOW_STRING} Error fetching route: {e}")
+
+
+if __name__ == "__main__":
+    main()
