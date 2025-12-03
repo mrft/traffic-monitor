@@ -6,8 +6,8 @@ env:
   # Add more lines to monitor multiple routes.
   ROUTES: |
     120 Carnotstraat, Antwerpen, Belgium|51.215447,4.4447065
-    412 N12, Antwerpen, Belgium|51.219000,4.425000
-    Antwerpen Centraal Station, Antwerpen, Belgium|51.217222,4.421944
+  # 412 N12, Antwerpen, Belgium|51.219000,4.425000
+  # Antwerpen Centraal Station, Antwerpen, Belgium|51.217222,4.421944
 
 on:
   schedule:
