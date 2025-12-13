@@ -59,6 +59,7 @@ jobs:
       - name: Download existing output artifact from previous runs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Find the latest artifact named output-artifact
           ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/artifacts \
@@ -147,6 +148,7 @@ jobs:
       - name: Download output artifact from previous runs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Find the latest artifact named output-artifact
           ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/artifacts \
@@ -172,6 +174,13 @@ jobs:
             mkdir -p data
             cat ./artifact/output.txt >> data/traffic.tsv
             echo "Appended output.txt content to data/traffic.tsv"
+            echo
+            echo "Current contents of ./artifact/output.txt:"
+            echo "------------------------------------------"
+            cat ./artifact/output.txt
+            echo "Current contents of data/traffic.tsv:"
+            echo "-------------------------------------"
+            cat ./data/traffic.tsv
           else
             echo "No output.txt found to append"
           fi
@@ -191,13 +200,19 @@ jobs:
       - name: Delete old artifacts to clear output
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Delete all output-artifact artifacts to start fresh
-          ARTIFACT_IDS=$(gh api repos/${{ github.repository }}/actions/artifacts \
-            --jq '.artifacts | map(select(.name == "output-artifact")) | .[].id')
+          # (Use --paginate to ensure we retrieve all artifacts across pages)
+          ARTIFACT_IDS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate \
+            --jq '.artifacts | map(select(.name == "output-artifact")) | .[].id' || true)
           
-          for ID in $ARTIFACT_IDS; do
-            echo "Deleting artifact ID: $ID"
-            gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$ID || true
-          done
-          echo "All output artifacts cleared"
+          if [ -z "$ARTIFACT_IDS" ]; then
+            echo "No output-artifact artifacts found to delete"
+          else
+            for ID in $ARTIFACT_IDS; do
+              echo "Deleting artifact ID: $ID"
+              gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$ID || true
+            done
+            echo "All matching output artifacts cleared"
+          fi
