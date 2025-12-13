@@ -172,15 +172,23 @@ jobs:
         run: |
           if [ -f ./artifact/output.txt ]; then
             mkdir -p data
+            NROFLINES_BEFORE=$(wc -l < ./artifact/output.txt | tr -d ' ')
             cat ./artifact/output.txt >> data/traffic.tsv
+
+            NROFLINES_AFTER=$(wc -l < data/traffic.tsv | tr -d ' ')
+            NROFLINES_ADDED=$(wc -l < ./artifact/output.txt | tr -d ' ')
             echo "Appended output.txt content to data/traffic.tsv"
-            echo
-            echo "Current contents of ./artifact/output.txt:"
-            echo "------------------------------------------"
-            cat ./artifact/output.txt
-            echo "Current contents of data/traffic.tsv:"
-            echo "-------------------------------------"
-            cat ./data/traffic.tsv
+            echo "${NROFLINES_BEFORE} + ${NROFLINES_ADDED} = ${NROFLINES_AFTER} total lines in data/traffic.tsv now"
+            echo "Added lines:"
+            echo "------------"
+            tail -n ${NROFLINES_ADDED} data/traffic.tsv
+            # echo
+            # echo "Current contents of ./artifact/output.txt:"
+            # echo "------------------------------------------"
+            # cat ./artifact/output.txt
+            # echo "Current contents of data/traffic.tsv:"
+            # echo "-------------------------------------"
+            # cat ./data/traffic.tsv
           else
             echo "No output.txt found to append"
           fi
