@@ -45852,3 +45852,6 @@ datetime	from	to	duration	streets
 2026-07-06T18:11:13.533426	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	385	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', 'Statielei', None]
 2026-07-06T18:11:13.533426	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	391	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', None, 'Helmstraat', 'Borsbeekstraat', 'Gijselsstraat']
 2026-07-06T18:11:13.533426	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	424	['Carnotstraat', 'Kerkstraat', 'Lovelingstraat', 'Schapenstraat', 'Kistemaeckersstraat', 'Vercammenstraat', 'Groeningerplein', 'Drossaardstraat', 'Borsbeekstraat', 'Gijselsstraat', None]
+2026-07-06T20:12:00.840130	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	319	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', None, 'Helmstraat', 'Borsbeekstraat', 'Gijselsstraat']
+2026-07-06T20:12:00.840130	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	361	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', 'Statielei', None]
+2026-07-06T20:12:00.840130	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	383	['Carnotstraat', 'Kerkstraat', 'Lovelingstraat', 'Schapenstraat', 'Kistemaeckersstraat', 'Vercammenstraat', 'Groeningerplein', 'Drossaardstraat', 'Borsbeekstraat', 'Gijselsstraat', None]
