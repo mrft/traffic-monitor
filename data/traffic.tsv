@@ -52501,3 +52501,6 @@ datetime	from	to	duration	streets
 2026-08-28T15:20:15.279379	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	463	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', 'Statielei', None, 'Helmstraat', 'Borsbeekstraat', 'Terlostraat', 'Florastraat']
 2026-08-28T15:20:15.279379	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	669	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', None, 'Helmstraat', 'Verzoeningstraat', 'Toekomststraat', 'Generaal Eisenhowerlei', 'Kattenberg', 'Bothastraat', 'Statielei']
 2026-08-28T15:20:15.279379	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	731	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', 'Statielei', None]
+2026-08-28T19:27:19.227426	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	402	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', None, 'Helmstraat', 'Borsbeekstraat', 'Terlostraat', 'Florastraat', 'Statielei']
+2026-08-28T19:27:19.227426	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	434	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', 'Statielei', None]
+2026-08-28T19:27:19.227426	120 Carnotstraat, Antwerpen, Belgium	51.215447,4.4447065	516	['Carnotstraat', 'Turnhoutsebaan', 'N12 - Turnhoutsebaan', None, 'Helmstraat', 'Verzoeningstraat', 'Toekomststraat', 'Generaal Eisenhowerlei', 'Kattenberg', 'Bothastraat', 'Statielei']
