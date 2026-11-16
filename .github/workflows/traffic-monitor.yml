@@ -13,7 +13,7 @@ on:
   schedule:
     # IMPORTANT: keep this in sync with 'if:'' statements below (the ones that decide whether to run collect or commit) !!!
     # COLLECT JOB SCHEDULE
-    - cron: '*/5 * * * *'        # Every 5 minutes
+    - cron: '*/15 * * * *'        # Every 15 minutes
     # COMMIT JOB SCHEDULE
     - cron: '0 1,8,12,17,20 * * *'  # Every day at 1:00, 8:00, 12:00, 17:00, and 20:00 UTC
   workflow_dispatch:
